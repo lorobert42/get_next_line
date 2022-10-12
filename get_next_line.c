@@ -6,13 +6,19 @@
 /*   By: lorobert <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/10 15:56:30 by lorobert          #+#    #+#             */
-/*   Updated: 2022/10/12 11:21:27 by lorobert         ###   ########.fr       */
+/*   Updated: 2022/10/12 11:37:54 by lorobert         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <stdlib.h>
 #include <unistd.h>
 #include "get_next_line.h"
+
+void	free_mem(void *p)
+{
+	if (p)
+		free(p);
+}
 
 int	find_newline(char *str)
 {
@@ -61,13 +67,8 @@ char	*clean_line(char *raw_line, char **remainder)
 		return (raw_line);
 	clean_line = ft_substr(raw_line, 0, index + 1);
 	*remainder = ft_substr(raw_line, index + 1, ft_strlen(raw_line) - index);
+	free_mem(raw_line);
 	return (clean_line);
-}
-
-void	free_mem(void *p)
-{
-	if (p)
-		free(p);
 }
 
 char	*get_next_line(int fd)
