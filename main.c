@@ -1,25 +1,35 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   get_next_line.h                                    :+:      :+:    :+:   */
+/*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: lorobert <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/10/10 14:21:20 by lorobert          #+#    #+#             */
-/*   Updated: 2022/10/12 10:44:40 by lorobert         ###   ########.fr       */
+/*   Created: 2022/10/12 10:06:47 by lorobert          #+#    #+#             */
+/*   Updated: 2022/10/12 10:58:34 by lorobert         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef GET_NEXT_LINE_H
-# define GET_NEXT_LINE_H
+#include <stdio.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include "get_next_line.h"
 
-# include <stddef.h>
+int	main(int argc, char **argv)
+{
+	int		fd;
+	char	*line;
 
-char	*get_next_line(int fd);
-
-char	*ft_strdup(char const *s);
-char	*ft_strjoin(char const *s1, char const *s2);
-size_t	ft_strlen(char const *s);
-char	*ft_substr(char const *s, unsigned int start, size_t len);
-
-#endif
+	(void) argc;
+	line = "";
+	fd = open(argv[1], O_RDONLY);
+	while (line)
+	{
+		line = get_next_line(fd);
+		if (!line)
+			printf("Error or end of file\n");
+		else
+			printf("%s", line);
+	}
+	close(fd);
+}
