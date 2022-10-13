@@ -6,7 +6,7 @@
 /*   By: lorobert <marvin@42lausanne.ch>            +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/10/10 15:56:30 by lorobert          #+#    #+#             */
-/*   Updated: 2022/10/12 11:37:54 by lorobert         ###   ########.fr       */
+/*   Updated: 2022/10/13 10:13:18 by lorobert         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,10 +14,13 @@
 #include <unistd.h>
 #include "get_next_line.h"
 
-void	free_mem(void *p)
+void	free_mem(char **p)
 {
-	if (p)
-		free(p);
+	if (p && *p)
+	{
+		free(*p);
+		*p = NULL;
+	}
 }
 
 int	find_newline(char *str)
@@ -32,42 +35,51 @@ int	find_newline(char *str)
 	return (-1);
 }
 
-char	*read_until_line(int fd, char **buffer, char *raw_line)
+void	read_until_line(int fd, char **remainder, char **tmp)
 {
 	int		len;
+	char	*buffer;
 
-	*buffer = malloc(sizeof(char) * BUFFER_SIZE);
-	if (!*buffer)
-		return (NULL);
+	buffer = malloc(sizeof(char) * (BUFFER_SIZE + 1));
+	if (!buffer)
+		return ;
 	len = 1;
 	while (len)
 	{
-		len = read(fd, *buffer, BUFFER_SIZE);
-		if (len == -1)
-			return (NULL);
-		if (!len)
-			return (raw_line);
-		if (!raw_line)
-			raw_line = ft_strdup(*buffer);
+		len = read(fd, buffer, BUFFER_SIZE);
+		if (len <= 0)
+			break ;
+		buffer[len] = '\0';
+		if (!*remainder)
+			*remainder = ft_strdup(buffer);
 		else
-			raw_line = ft_strjoin(raw_line, *buffer);
-		if (find_newline(raw_line) != -1)
-			return (raw_line);
+		{
+			*tmp = ft_strjoin(*remainder, buffer);
+			free_mem(remainder);
+			*remainder = *tmp;
+		}
+		if (find_newline(buffer) != -1)
+			break ;
 	}
-	return (raw_line);
+	free_mem(&buffer);
 }
 
-char	*clean_line(char *raw_line, char **remainder)
+char	*clean_line(char **rest, char **tmp)
 {
 	int		index;
 	char	*clean_line;
 
-	index = find_newline(raw_line);
+	index = find_newline(*rest);
 	if (index == -1)
-		return (raw_line);
-	clean_line = ft_substr(raw_line, 0, index + 1);
-	*remainder = ft_substr(raw_line, index + 1, ft_strlen(raw_line) - index);
-	free_mem(raw_line);
+	{
+		clean_line = ft_strdup(*rest);
+		free_mem(rest);
+		return (clean_line);
+	}
+	clean_line = ft_substr(*rest, 0, index + 1);
+	*tmp = ft_substr(*rest, index + 1, ft_strlen(*rest) - index);
+	free_mem(rest);
+	*rest = *tmp;
 	return (clean_line);
 }
 
@@ -75,21 +87,20 @@ char	*get_next_line(int fd)
 {
 	static char	*remainder = NULL;
 	char		*line;
-	char		*buffer;
+	char		*tmp;
 
 	if (fd < 0 || !BUFFER_SIZE)
 		return (NULL);
-	line = read_until_line(fd, &buffer, remainder);
-	free_mem(buffer);
-	if (!line)
+	read_until_line(fd, &remainder, &tmp);
+	if (!remainder || !remainder[0])
 	{
-		free_mem(remainder);
+		free_mem(&remainder);
 		return (NULL);
 	}
-	line = clean_line(line, &remainder);
+	line = clean_line(&remainder, &tmp);
 	if (!line)
 	{
-		free_mem(remainder);
+		free_mem(&remainder);
 		return (NULL);
 	}
 	return (line);
